@@ -14,8 +14,8 @@ class NotesDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         private const val COLUMN_ID="id"
         private const val COLUMN_TITLE="title"
         private const val COLUMN_CONTENT="content"
-
-
+        private const val COLUMN_ISFAVOURITE="isfavourite"
+        private const val COLUMN_LOCATION="location"
     }
 
     // add date attribute to the schema
@@ -27,8 +27,10 @@ class NotesDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
     //sort from 1st date to last date of month
 
     override fun onCreate(db: SQLiteDatabase?) {
-        val createTableQuery = "CREATE TABLE $TABLE_NAME ($COLUMN_ID INTEGER PRIMARY KEY, $COLUMN_TITLE TEXT, $COLUMN_CONTENT TEXT)"
+        val createTableQuery = "CREATE TABLE $TABLE_NAME ($COLUMN_ID INTEGER PRIMARY KEY, $COLUMN_TITLE TEXT, $COLUMN_CONTENT TEXT, $COLUMN_ISFAVOURITE INTEGER, $COLUMN_LOCATION TEXT)"
+
         db?.execSQL(createTableQuery)
+
     }
 
 
@@ -56,7 +58,10 @@ class NotesDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
             val id =cursor.getInt(cursor.getColumnIndexOrThrow(COLUMN_ID))
             val title =cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE))
             val content =cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTENT))
-            val note = Note(id,title,content)
+            val isFav =cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTENT))
+            val location =cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTENT))
+
+            val note = Note(id,title,content, isFav, location)
             notesList.add(note)
         }
         cursor.close()
@@ -74,6 +79,16 @@ class NotesDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         db.update(TABLE_NAME,values,whereClause,whereArgs)
         db.close()
     }
+    fun addToFav(note:Note, isFav: String){
+        val db = writableDatabase
+        val values = ContentValues().apply {
+            put(COLUMN_ISFAVOURITE, isFav)
+        }
+        val whereClause = "$COLUMN_ID=?"
+        val whereArgs = arrayOf(note.id.toString())
+        db.update(TABLE_NAME,values,whereClause,whereArgs)
+        db.close()
+    }
 
     fun getNoteByID(noteId : Int) : Note {
         val db =readableDatabase
@@ -84,9 +99,12 @@ class NotesDatabaseHelper(context: Context) : SQLiteOpenHelper(context, DATABASE
         val title = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_TITLE))
         val content = cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTENT))
 
+        val isFav =cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTENT))
+        val location =cursor.getString(cursor.getColumnIndexOrThrow(COLUMN_CONTENT))
+
         cursor.close()
         db.close()
-        return Note(id,title,content)
+        return Note(id,title,content, isFav, location)
     }
     fun deleteNote(noteId:Int ){
         val db = writableDatabase
